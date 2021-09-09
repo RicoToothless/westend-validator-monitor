@@ -1,0 +1,29 @@
+aws:
+  region: "ap-northeast-1"
+policy: sync
+txtPrefix: "_"
+txtOwnerId: "monitor-cluster"
+extraEnv:
+  - name: AWS_DEFAULT_REGION
+    value: ap-northeast-1
+  - name: AWS_REGION
+    value: ap-northeast-1
+  - name: AWS_ROLE_ARN
+    value: <your IRSA IAM role ARN>
+  - name: AWS_WEB_IDENTITY_TOKEN_FILE
+    value: "/var/run/secrets/amazonaws.com/serviceaccount/token"
+  - name: AWS_STS_REGIONAL_ENDPOINTS
+    value: "regional"
+podSecurityContext:
+  fsGroup: 65534
+extraVolumes:
+  - name: aws-token
+    projected:
+      sources:
+      - serviceAccountToken:
+          audience: "amazonaws.com"
+          expirationSeconds: 86400
+          path: token
+extraVolumeMounts:
+  - mountPath: "/var/run/secrets/amazonaws.com/serviceaccount/"
+    name: aws-token

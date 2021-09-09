@@ -1,0 +1,83 @@
+apiVersion: kops.k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  generation: 1
+  name: rico.ninja
+spec:
+  api:
+    dns: {}
+  authorization:
+    rbac: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://monitor-cluster-s3-bucket/rico.ninja
+  etcdClusters:
+  - cpuRequest: 200m
+    etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-ap-northeast-1a
+      name: a
+    memoryRequest: 100Mi
+    name: main
+  - cpuRequest: 100m
+    etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-ap-northeast-1a
+      name: a
+    memoryRequest: 100Mi
+    name: events
+  kubelet:
+    anonymousAuth: false
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  kubernetesVersion: 1.21.4
+  masterInternalName: api.internal.rico.ninja
+  masterPublicName: api.rico.ninja
+  networkCIDR: 172.20.0.0/16
+  networking:
+    kubenet: {}
+  nonMasqueradeCIDR: 100.64.0.0/10
+  sshAccess:
+  - 0.0.0.0/0
+  subnets:
+  - cidr: 172.20.32.0/19
+    name: ap-northeast-1a
+    type: Public
+    zone: ap-northeast-1a
+  topology:
+    dns:
+      type: Public
+    masters: public
+    nodes: public
+  serviceAccountIssuerDiscovery:
+    discoveryStore: s3://monitor-cluster-irsa
+    enableAWSOIDCProvider: true
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+    serviceAccountExternalPermissions:
+      - name: external-dns
+        namespace: kube-system
+        aws:
+          inlinePolicy: |-
+            [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "route53:ChangeResourceRecordSets"
+                ],
+                "Resource": [
+                  "arn:aws:route53:::hostedzone/*"
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "route53:ListHostedZones",
+                  "route53:ListResourceRecordSets"
+                ],
+                "Resource": [
+                  "*"
+                ]
+              }
+            ]
