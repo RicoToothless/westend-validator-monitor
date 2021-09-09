@@ -1,0 +1,9 @@
+apiVersion: kilo.squat.ai/v1alpha1
+kind: Peer
+metadata:
+  name: rico
+spec:
+  allowedIPs:
+  - 10.5.0.1/32
+  publicKey: <your WireGuard public key>
+  persistentKeepalive: 10

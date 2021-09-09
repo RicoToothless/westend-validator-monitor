@@ -1,0 +1,43 @@
+# Kubernetes assets (kubeconfig, manifests)
+module "bootstrap" {
+  source = "git::https://github.com/poseidon/terraform-render-bootstrap.git?ref=d7fd3f62661def56e231602a3b101ff5e9ea8447"
+
+  cluster_name          = var.cluster_name
+  api_servers           = [format("%s.%s", var.cluster_name, var.dns_zone)]
+  etcd_servers          = aws_route53_record.etcds.*.fqdn
+  networking            = var.networking
+  network_mtu           = var.network_mtu
+  pod_cidr              = var.pod_cidr
+  service_cidr          = var.service_cidr
+  cluster_domain_suffix = var.cluster_domain_suffix
+  enable_reporting      = var.enable_reporting
+  enable_aggregation    = var.enable_aggregation
+  daemonset_tolerations = var.daemonset_tolerations
+}
+
+# add wireguard port
+resource "aws_security_group_rule" "wireguard-controllers" {
+  security_group_id = "${aws_security_group.controller.id}"
+
+  type        = "ingress"
+  protocol    = -1
+  from_port   = 0
+  to_port     = 0
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "wireguard-workers" {
+  security_group_id = "${aws_security_group.worker.id}"
+
+  type        = "ingress"
+  protocol    = -1
+  from_port   = 0
+  to_port     = 0
+  cidr_blocks = ["0.0.0.0/0"]
+}
+
+# Obtain cluster kubeconfig
+resource "local_file" "kubeconfig-bootstrap" {
+  content  = module.bootstrap.kubeconfig-admin
+  filename = <your kube config path location>
+}
